@@ -57,6 +57,12 @@ bool Game::Init()
 		SDL_Log("Unable to load Background: %s", SDL_GetError());
 		return false;
 	}
+	EnemyShip = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/ship.png"));
+	if (EnemyShip == NULL)
+	{
+		SDL_Log("Unable to load Enemyship: %s", SDL_GetError());
+		return false;
+	}
 	//Initialize Music
 	Mix_Init(MIX_INIT_OGG);
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024);
@@ -80,12 +86,12 @@ bool Game::Init()
 	//AUDIO
 	Mix_PlayMusic(Music, -1);
 	//VIDEO
-	Player.Init(20, WINDOW_HEIGHT >> 1, 104, 82, 5);
-	Enemy.Init(650, WINDOW_HEIGHT >> 1, 104, 82, 5);
+	Player.Init(20, WINDOW_HEIGHT >> 1, 104, 82, 5, 3, 1);
+	Enemy.Init(650, WINDOW_HEIGHT >> 1, 82, 82, 5, 3, 1);
 	//GAME VARIABLES
 	int w;
 	SDL_QueryTexture(Background, NULL, NULL, &w, NULL);
-	Scene.Init(0, 0, w, WINDOW_HEIGHT, 4);
+	Scene.Init(0, 0, w, WINDOW_HEIGHT, 4, NULL, NULL);
 	idx_shot = 0;
 	godMode = false;
 
@@ -98,6 +104,7 @@ void Game::Release()
 	SDL_DestroyTexture(Spaceship);
 	SDL_DestroyTexture(Shot);
 	SDL_DestroyTexture(Background);
+	SDL_DestroyTexture(EnemyShip);
 	Mix_FreeMusic(Music);
 	Mix_FreeChunk(Fx_shoot);
 	Mix_CloseAudio();
@@ -142,10 +149,10 @@ bool Game::Update()
 	{
 		int x, y, w, h;
 		Player.GetRect(&x, &y, &w, &h);
-		Shots[idx_shot].Init(x + w - 75, y + h - 79, 56, 20, 10);
+		Shots[idx_shot].Init(x + w - 75, y + h - 79, 56, 20, 10, 1, 1);
 		idx_shot++;
 		idx_shot %= MAX_SHOTS;
-		Shots[idx_shot].Init(x + w - 75, y + h - 23, 56, 20, 10);
+		Shots[idx_shot].Init(x + w - 75, y + h - 23, 56, 20, 10, 1, 1);
 		idx_shot++;
 		idx_shot %= MAX_SHOTS;
 		Mix_PlayChannel(-1, Fx_shoot, 0);
@@ -166,7 +173,11 @@ bool Game::Update()
 		{
 			Shots[i].Move(1, 0);
 			if (Shots[i].GetX() > WINDOW_WIDTH)	Shots[i].ShutDown();
-			
+			if ((Shots[i].GetX() == Enemy.GetX()) && (Shots[i].GetY() == Enemy.GetY()))	Shots[i].ShutDown();
+			if (CheckCollision(Enemy.EntityRect(), Shots[i].EntityRect()))
+			{
+				Enemy.DealDamage(Shots[i]);
+			}
 		}
 
 	}
@@ -197,7 +208,7 @@ void Game::Draw()
 	if (Enemy.IsAlive())
 	{
 		Enemy.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
-		SDL_RenderCopy(Renderer, Spaceship, NULL, &dstRc);
+		SDL_RenderCopy(Renderer, EnemyShip, NULL, &dstRc);
 		if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
 	}
 
@@ -217,4 +228,36 @@ void Game::Draw()
 	SDL_RenderPresent(Renderer);
 
 	SDL_Delay(10);	// 1000/10 = 100 fps max
+}
+
+bool Game::CheckCollision(SDL_Rect a, SDL_Rect b)
+{
+	int leftA, leftB;
+	int rightA, rightB;
+	int topA, topB;
+	int bottomA, bottomB;
+
+	leftA = a.x;
+	rightA = a.x + a.w;
+	topA = a.y;
+	bottomA = a.y + a.h;
+
+	leftB = b.x;
+	rightB = b.x + b.w;
+	topB = b.y;
+	bottomB = b.y + b.h;
+
+	if (bottomA <= topB) {
+		return false;
+	}
+	if (topA >= bottomB) {
+		return false;
+	}
+	if (rightA <= leftB) {
+		return false;
+	}
+	if (leftA >= rightB) {
+		return false;
+	}
+	return true;
 }

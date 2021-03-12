@@ -24,6 +24,7 @@ public:
 	bool Input();
 	bool Update();
 	void Draw();
+	bool CheckCollision(SDL_Rect a, SDL_Rect b);
 
 private:
 	SDL_Window* Window;
@@ -32,6 +33,8 @@ private:
 	SDL_Texture* Spaceship;
 	SDL_Texture* Shot;
 	SDL_Texture* Background;
+	SDL_Texture* EnemyShip;
+
 	Mix_Music* Music;
 	Mix_Chunk* Fx_shoot;
 	
