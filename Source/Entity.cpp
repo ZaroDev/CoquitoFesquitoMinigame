@@ -1,10 +1,11 @@
 #include "Entity.h"
 
 
-Entity::Entity()
+Entity::Entity(std::string _name) : Name(_name)
 {
 	is_alive = false;
 }
+Entity::Entity() {}
 Entity::~Entity()
 {
 }
@@ -55,6 +56,8 @@ int Entity::GetWidth()
 void Entity::ShutDown()
 {
 	is_alive = false;
+	entityCollider.w = 0;
+	entityCollider.h = 0;
 }
 bool Entity::IsAlive()
 {
@@ -77,7 +80,7 @@ SDL_Rect Entity::EntityRect()
 void Entity::DealDamage(Entity obj)
 {
 	life -= obj.damage;
-
+	std::cout << Name << " Life: " << life << std::endl;
 	if (life <= 0)
 	{
 		ShutDown();

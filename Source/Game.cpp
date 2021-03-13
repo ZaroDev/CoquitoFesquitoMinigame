@@ -1,18 +1,20 @@
 #include "Game.h"
 #include <math.h>
 
+
 Game::Game() {}
 Game::~Game() {}
 
 bool Game::Init()
 {
 	//Initialize SDL with all subsystems
+	SDL_Init(SDL_INIT_EVERYTHING);
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
 		return false;
 	}
 	//Create our window: title, x, y, w, h, flags
-	Window = SDL_CreateWindow("Spaceship: arrow keys + space", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+	Window = SDL_CreateWindow("Spaceship: arrow keys + space", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
 	if (Window == NULL)
 	{
 		SDL_Log("Unable to create window: %s", SDL_GetError());
@@ -166,6 +168,8 @@ bool Game::Update()
 	if (Scene.GetX() <= -Scene.GetWidth()) Scene.SetX(0);
 	Player.Move(fx, fy);
 
+	//
+
 	//Shots update
 	for (int i = 0; i < MAX_SHOTS; ++i)
 	{
@@ -174,15 +178,29 @@ bool Game::Update()
 			Shots[i].Move(1, 0);
 			if (Shots[i].GetX() > WINDOW_WIDTH)	Shots[i].ShutDown();
 			if ((Shots[i].GetX() == Enemy.GetX()) && (Shots[i].GetY() == Enemy.GetY()))	Shots[i].ShutDown();
-			if (CheckCollision(Enemy.EntityRect(), Shots[i].EntityRect()))
+			if (Enemy.IsAlive())
 			{
-				Enemy.DealDamage(Shots[i]);
-				Shots[i].ShutDown();
+				if (CheckCollision(Enemy.EntityRect(), Shots[i].EntityRect()))
+				{
+					Enemy.DealDamage(Shots[i]);
+					Shots[i].ShutDown();
+					std::cout << "Enemy Impact" << std::endl;
+				}
 			}
+
 		}
 
 	}
+	//Collisions Update
+	if (Enemy.IsAlive() && Player.IsAlive())
+	{
+		if (CheckCollision(Enemy.EntityRect(), Player.EntityRect()))
+		{
+			Enemy.ShutDown();
+			Player.DealDamage(Enemy);
 
+		}
+	}
 	return false;
 }
 void Game::Draw()

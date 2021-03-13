@@ -1,9 +1,11 @@
 #pragma once
 #include "SDL/include/SDL.h"
-#define MAX_SHOTS		32
+#include <iostream>
+
 class Entity
 {
 public:
+	Entity(std::string _name);
 	Entity();
 	~Entity();
 	void Init(int posx, int posy, int w, int h, int s, int l, int d);
@@ -28,5 +30,6 @@ private:
 	int life;
 	int damage;
 	SDL_Rect entityCollider;
+	std::string Name;
 };
 
