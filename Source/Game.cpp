@@ -14,7 +14,7 @@ bool Game::Init()
 		return false;
 	}
 	//Create our window: title, x, y, w, h, flags
-	Window = SDL_CreateWindow("Spaceship: arrow keys + space", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
+	Window = SDL_CreateWindow("Ghost Jump", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
 	if (Window == NULL)
 	{
 		SDL_Log("Unable to create window: %s", SDL_GetError());
@@ -38,18 +38,10 @@ bool Game::Init()
 		return false;
 	}
 
-	Spaceship = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/spaceship.png"));
-	if (Spaceship == NULL)
+	PlayerIMG = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/ghost.png"));
+	if (PlayerIMG == NULL)
 	{
-		SDL_Log("Unable to load Spaceship: %s", SDL_GetError());
-		return false;
-	}
-
-
-	Shot = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/shot.png"));
-	if (Shot == NULL)
-	{
-		SDL_Log("Unable to load Shots: %s", SDL_GetError());
+		SDL_Log("Unable to load PlayerIMG: %s", SDL_GetError());
 		return false;
 	}
 
@@ -59,12 +51,13 @@ bool Game::Init()
 		SDL_Log("Unable to load Background: %s", SDL_GetError());
 		return false;
 	}
-	EnemyShip = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/ship.png"));
-	if (EnemyShip == NULL)
+	PlatformIMG = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/steps.png"));
+	if (PlatformIMG == NULL)
 	{
-		SDL_Log("Unable to load Enemyship: %s", SDL_GetError());
+		SDL_Log("Unable to load Steps: %s", SDL_GetError());
 		return false;
 	}
+	
 	//Initialize Music
 	Mix_Init(MIX_INIT_OGG);
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024);
@@ -75,7 +68,7 @@ bool Game::Init()
 		SDL_Log("Unable to load Music: %s", SDL_GetError());
 		return false;
 	}
-	Fx_shoot = Mix_LoadWAV("Assets/laser.wav");
+	Fx_shoot = Mix_LoadWAV("Assets/fx_jump.wav");
 	if (Fx_shoot == NULL)
 	{
 		SDL_Log("Unable to load FX_SHOT: %s", SDL_GetError());
@@ -86,15 +79,14 @@ bool Game::Init()
 	
 	//Init variables
 	//AUDIO
-	//Mix_PlayMusic(Music, -1);
+	Mix_PlayMusic(Music, -1);
 	//VIDEO
 	Player.Init(20, WINDOW_HEIGHT >> 1, 104, 82, 5, 3, 1);
-	Enemy.Init(650, WINDOW_HEIGHT >> 1, 82, 82, 5, 3, 1);
 	//GAME VARIABLES
 	int w;
 	SDL_QueryTexture(Background, NULL, NULL, &w, NULL);
 	Scene.Init(0, 0, w, WINDOW_HEIGHT, 4, NULL, NULL);
-	idx_shot = 0;
+
 	godMode = false;
 
 
@@ -103,10 +95,10 @@ bool Game::Init()
 void Game::Release()
 {
 	//Clean up all SDL initialized subsystems
-	SDL_DestroyTexture(Spaceship);
-	SDL_DestroyTexture(Shot);
+
+	SDL_DestroyTexture(PlayerIMG);
 	SDL_DestroyTexture(Background);
-	SDL_DestroyTexture(EnemyShip);
+
 	Mix_FreeMusic(Music);
 	Mix_FreeChunk(Fx_shoot);
 	Mix_CloseAudio();
@@ -143,64 +135,19 @@ bool Game::Update()
 	int fx = 0, fy = 0;
 	if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN)	return true;
 	if (keys[SDL_SCANCODE_F1] == KEY_DOWN) godMode = !godMode;
-	if (keys[SDL_SCANCODE_UP] == KEY_REPEAT)	fy = -1;
-	if (keys[SDL_SCANCODE_DOWN] == KEY_REPEAT)	fy = 1;
+	if (keys[SDL_SCANCODE_UP] == KEY_REPEAT)
+	{
+		fy = -2;
+		Mix_PlayChannel(-1, Fx_shoot, 0);
+	}
+	
 	if (keys[SDL_SCANCODE_LEFT] == KEY_REPEAT)	fx = -1;
 	if (keys[SDL_SCANCODE_RIGHT] == KEY_REPEAT)	fx = 1;
-	if (keys[SDL_SCANCODE_SPACE] == KEY_DOWN)
-	{
-		int x, y, w, h;
-		Player.GetRect(&x, &y, &w, &h);
-		Shots[idx_shot].Init(x + w - 75, y + h - 79, 56, 20, 10, 1, 1);
-		idx_shot++;
-		idx_shot %= MAX_SHOTS;
-		Shots[idx_shot].Init(x + w - 75, y + h - 23, 56, 20, 10, 1, 1);
-		idx_shot++;
-		idx_shot %= MAX_SHOTS;
-		//Mix_PlayChannel(-1, Fx_shoot, 0);
-
-	}
-
-
-	//Logic
-	//Player update
-	Scene.Move(-1, 0);
-	if (Scene.GetX() <= -Scene.GetWidth()) Scene.SetX(0);
+	
 	Player.Move(fx, fy);
 
-	//
-
-	//Shots update
-	for (int i = 0; i < MAX_SHOTS; ++i)
-	{
-		if (Shots[i].IsAlive())
-		{
-			Shots[i].Move(1, 0);
-			if (Shots[i].GetX() > WINDOW_WIDTH)	Shots[i].ShutDown();
-			if ((Shots[i].GetX() == Enemy.GetX()) && (Shots[i].GetY() == Enemy.GetY()))	Shots[i].ShutDown();
-			if (Enemy.IsAlive())
-			{
-				if (CheckCollision(Enemy.EntityRect(), Shots[i].EntityRect()))
-				{
-					Enemy.DealDamage(Shots[i]);
-					Shots[i].ShutDown();
-					std::cout << "Enemy Impact" << std::endl;
-				}
-			}
-
-		}
-
-	}
 	//Collisions Update
-	if (Enemy.IsAlive() && Player.IsAlive())
-	{
-		if (CheckCollision(Enemy.EntityRect(), Player.EntityRect()))
-		{
-			Enemy.ShutDown();
-			Player.DealDamage(Enemy);
-
-		}
-	}
+	//TODO: CHECK PLAYER, SHOTS && ENEMIES COLLISIONS
 	return false;
 }
 void Game::Draw()
@@ -218,30 +165,10 @@ void Game::Draw()
 
 	Scene.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 	SDL_RenderCopy(Renderer, Background, NULL, &dstRc);
-	dstRc.x += dstRc.w;
-	SDL_RenderCopy(Renderer, Background, NULL, &dstRc);
 
 	Player.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
-	SDL_RenderCopy(Renderer, Spaceship, NULL, &dstRc);
+	SDL_RenderCopy(Renderer, PlayerIMG, NULL, &dstRc);
 	if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
-	if (Enemy.IsAlive())
-	{
-		Enemy.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
-		SDL_RenderCopy(Renderer, EnemyShip, NULL, &dstRc);
-		if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
-	}
-
-	//Draw shots
-	SDL_SetRenderDrawColor(Renderer, 192, 0, 0, 255);
-	for (int i = 0; i < MAX_SHOTS; ++i)
-	{
-		if (Shots[i].IsAlive())
-		{
-			Shots[i].GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
-			SDL_RenderCopy(Renderer, Shot, NULL, &dstRc);
-			if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
-		}
-	}
 
 	//Update screen
 	SDL_RenderPresent(Renderer);

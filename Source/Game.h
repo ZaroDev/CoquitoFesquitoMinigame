@@ -8,10 +8,10 @@
 #include "Entity.h"
 #include <iostream>
 
-#define WINDOW_WIDTH	1024
-#define WINDOW_HEIGHT	768
+#define WINDOW_WIDTH	768
+#define WINDOW_HEIGHT	1024
 #define MAX_KEYS		256
-#define MAX_SHOTS		32
+
 
 class Game
 {
@@ -31,21 +31,18 @@ private:
 	SDL_Window* Window;
 	SDL_Renderer* Renderer;
 
-	SDL_Texture* Spaceship;
-	SDL_Texture* Shot;
+	SDL_Texture* PlayerIMG;
 	SDL_Texture* Background;
-	SDL_Texture* EnemyShip;
+	SDL_Texture* PlatformIMG;
+
 
 	Mix_Music* Music;
 	Mix_Chunk* Fx_shoot;
 	
 
-	Entity Player, Scene, Shots[MAX_SHOTS], Enemy;
+	Entity Player, Scene, Platform;
 
 	bool godMode;
-
-	int idx_shot;
-
 
 	enum KEY_STATE { KEY_IDLE, KEY_DOWN, KEY_REPEAT, KEY_UP };
 	KEY_STATE keys[MAX_KEYS];

@@ -17,19 +17,17 @@ public:
 	int GetWidth();
 	void ShutDown();
 	bool IsAlive();
-	void Move(int dx, int dy);
+	void Move(float dx, float dy);
 	SDL_Rect EntityRect();
-	void DealDamage(Entity obj);
+
 
 
 private:
-	int x, y;
+	float x, y;
 	int width, height;
 	int speed;
 	bool is_alive;
-	int life;
-	int damage;
 	SDL_Rect entityCollider;
-	std::string Name;
+
 };
 

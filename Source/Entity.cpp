@@ -1,14 +1,12 @@
 #include "Entity.h"
 
 
-Entity::Entity(std::string _name) : Name(_name)
+Entity::Entity(std::string _name)
 {
 	is_alive = false;
 }
 Entity::Entity() {}
-Entity::~Entity()
-{
-}
+Entity::~Entity() {}
 void Entity::Init(int posx, int posy, int w, int h, int s, int l, int d)
 {
 	x = posx;
@@ -16,8 +14,6 @@ void Entity::Init(int posx, int posy, int w, int h, int s, int l, int d)
 	width = w;
 	height = h;
 	speed = s;
-	life = l;
-	damage = d;
 	is_alive = true;
 	entityCollider.w = width;
 	entityCollider.h = height;
@@ -64,12 +60,10 @@ bool Entity::IsAlive()
 	return is_alive;
 }
 
-void Entity::Move(int dx, int dy)
+void Entity::Move(float dx, float dy)
 {
 	x += dx * speed;
-	y += dy * speed;
-	entityCollider.x = x;
-	entityCollider.y = y;
+	y += (dy * speed) + 1;
 }
 
 SDL_Rect Entity::EntityRect()
@@ -77,12 +71,4 @@ SDL_Rect Entity::EntityRect()
 	return entityCollider;
 }
 
-void Entity::DealDamage(Entity obj)
-{
-	life -= obj.damage;
-	std::cout << Name << " Life: " << life << std::endl;
-	if (life <= 0)
-	{
-		ShutDown();
-	}
-}
+
