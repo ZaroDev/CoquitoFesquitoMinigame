@@ -1,5 +1,6 @@
 #pragma once
 #include "SDL/include/SDL.h"
+#define MAX_SHOTS		32
 class Entity
 {
 public:
@@ -10,12 +11,14 @@ public:
 	int GetX();
 	int GetY();
 	void SetX(int posx);
+	void SetY(int posy);
 	int GetWidth();
 	void ShutDown();
 	bool IsAlive();
 	void Move(int dx, int dy);
 	SDL_Rect EntityRect();
 	void DealDamage(Entity obj);
+
 
 private:
 	int x, y;
@@ -25,6 +28,5 @@ private:
 	int life;
 	int damage;
 	SDL_Rect entityCollider;
-	
 };
 

@@ -10,7 +10,6 @@
 #define WINDOW_WIDTH	1024
 #define WINDOW_HEIGHT	768
 #define MAX_KEYS		256
-#define MAX_SHOTS		32
 
 class Game
 {
@@ -39,7 +38,7 @@ private:
 	Mix_Chunk* Fx_shoot;
 	
 
-	Entity Player, Shots[MAX_SHOTS], Scene, Enemy;
+	Entity Player, Scene, Shots[MAX_SHOTS], Enemy;
 
 	bool godMode;
 

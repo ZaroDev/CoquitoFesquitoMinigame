@@ -84,7 +84,7 @@ bool Game::Init()
 	
 	//Init variables
 	//AUDIO
-	Mix_PlayMusic(Music, -1);
+	//Mix_PlayMusic(Music, -1);
 	//VIDEO
 	Player.Init(20, WINDOW_HEIGHT >> 1, 104, 82, 5, 3, 1);
 	Enemy.Init(650, WINDOW_HEIGHT >> 1, 82, 82, 5, 3, 1);
@@ -155,7 +155,7 @@ bool Game::Update()
 		Shots[idx_shot].Init(x + w - 75, y + h - 23, 56, 20, 10, 1, 1);
 		idx_shot++;
 		idx_shot %= MAX_SHOTS;
-		Mix_PlayChannel(-1, Fx_shoot, 0);
+		//Mix_PlayChannel(-1, Fx_shoot, 0);
 
 	}
 
@@ -165,7 +165,7 @@ bool Game::Update()
 	Scene.Move(-1, 0);
 	if (Scene.GetX() <= -Scene.GetWidth()) Scene.SetX(0);
 	Player.Move(fx, fy);
-	Enemy.Move(0, 0);
+
 	//Shots update
 	for (int i = 0; i < MAX_SHOTS; ++i)
 	{
@@ -177,6 +177,7 @@ bool Game::Update()
 			if (CheckCollision(Enemy.EntityRect(), Shots[i].EntityRect()))
 			{
 				Enemy.DealDamage(Shots[i]);
+				Shots[i].ShutDown();
 			}
 		}
 
@@ -229,7 +230,6 @@ void Game::Draw()
 
 	SDL_Delay(10);	// 1000/10 = 100 fps max
 }
-
 bool Game::CheckCollision(SDL_Rect a, SDL_Rect b)
 {
 	int leftA, leftB;

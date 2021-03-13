@@ -44,6 +44,10 @@ void Entity::SetX(int posx)
 {
 	x = posx;
 }
+void Entity::SetY(int posy)
+{
+	y = posy;
+}
 int Entity::GetWidth()
 {
 	return width;
@@ -73,13 +77,9 @@ SDL_Rect Entity::EntityRect()
 void Entity::DealDamage(Entity obj)
 {
 	life -= obj.damage;
-	obj.life -= damage;
+
 	if (life <= 0)
 	{
 		ShutDown();
-	}
-	if (obj.life <= 0)
-	{
-		obj.ShutDown();
 	}
 }
