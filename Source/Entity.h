@@ -21,12 +21,12 @@ public:
 	SDL_Rect EntityRect();
 
 
-
 private:
 	float x, y;
 	int width, height;
 	int speed;
 	bool is_alive;
+	
 	SDL_Rect entityCollider;
 
 };

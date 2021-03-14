@@ -14,7 +14,7 @@ bool Game::Init()
 		return false;
 	}
 	//Create our window: title, x, y, w, h, flags
-	Window = SDL_CreateWindow("Ghost Jump", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
+	Window = SDL_CreateWindow("Ghost Shot", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
 	if (Window == NULL)
 	{
 		SDL_Log("Unable to create window: %s", SDL_GetError());
@@ -51,10 +51,10 @@ bool Game::Init()
 		SDL_Log("Unable to load Background: %s", SDL_GetError());
 		return false;
 	}
-	PlatformIMG = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/steps.png"));
-	if (PlatformIMG == NULL)
+	ShotIMG = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/steps.png"));
+	if (ShotIMG == NULL)
 	{
-		SDL_Log("Unable to load Steps: %s", SDL_GetError());
+		SDL_Log("Unable to load Shot: %s", SDL_GetError());
 		return false;
 	}
 	
@@ -81,16 +81,12 @@ bool Game::Init()
 	//AUDIO
 	Mix_PlayMusic(Music, -1);
 	//VIDEO
-	Player.Init(20, WINDOW_HEIGHT >> 1, 104, 82, 5, 3, 1);
+	Player.Init(620, WINDOW_HEIGHT >> 1, 82, 82, 5, 3, 1);
 	//GAME VARIABLES
 	int w;
 	SDL_QueryTexture(Background, NULL, NULL, &w, NULL);
 	Scene.Init(0, 0, w, WINDOW_HEIGHT, 4, NULL, NULL);
-
-
-	Entity platform;
-	platform.Init(100, 200, 104, 82, 0, 3, 1);
-
+	idx_shot = 0;
 	godMode = false;
 
 
@@ -139,16 +135,31 @@ bool Game::Update()
 	int fx = 0, fy = 0;
 	if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN)	return true;
 	if (keys[SDL_SCANCODE_F1] == KEY_DOWN) godMode = !godMode;
-	if (keys[SDL_SCANCODE_UP] == KEY_DOWN)
+	if (keys[SDL_SCANCODE_UP] == KEY_REPEAT)	fy = -1;
+	if (keys[SDL_SCANCODE_DOWN] == KEY_REPEAT)	fy = 1;
+	if (keys[SDL_SCANCODE_LEFT] == KEY_REPEAT)	fx = -1;
+	if (keys[SDL_SCANCODE_RIGHT] == KEY_REPEAT)	fx = 1;
+	if (keys[SDL_SCANCODE_SPACE] == KEY_DOWN)
 	{
-		fy = -10;
+		int x, y, w, h;
+		Player.GetRect(&x, &y, &w, &h);
+		//size: 56x20
+		//offset from player: dx, dy = [(29, 3), (29, 59)]
+		Shots[idx_shot].Init(x, y, 56, 20, 10, 1, 1);
+		idx_shot++;
+		idx_shot %= MAX_SHOTS;
 		Mix_PlayChannel(-1, Fx_shoot, 0);
 	}
 	
-	if (keys[SDL_SCANCODE_LEFT] == KEY_REPEAT)	fx = -1;
-	if (keys[SDL_SCANCODE_RIGHT] == KEY_REPEAT)	fx = 1;
-	
 	Player.Move(fx, fy);
+	for (int i = 0; i < MAX_SHOTS; ++i)
+	{
+		if (Shots[i].IsAlive())
+		{
+			Shots[i].Move(-1, 0);
+			if (Shots[i].GetX() < 0)	Shots[i].ShutDown();
+		}
+	}
 
 	
 
@@ -175,14 +186,20 @@ void Game::Draw()
 	Player.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 	SDL_RenderCopy(Renderer, PlayerIMG, NULL, &dstRc);
 	if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
-
-	
 	
 	Platform.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 	SDL_SetRenderDrawColor(Renderer, 150, 52, 7, 255);
 	SDL_RenderDrawRect(Renderer, &dstRc);
 	SDL_RenderFillRect(Renderer, &dstRc);
-	
+	for (int i = 0; i < MAX_SHOTS; ++i)
+	{
+		if (Shots[i].IsAlive())
+		{
+			Shots[i].GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
+			SDL_RenderCopy(Renderer, ShotIMG, NULL, &dstRc);
+			if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
+		}
+	}
 	//Update screen
 	SDL_RenderPresent(Renderer);
 

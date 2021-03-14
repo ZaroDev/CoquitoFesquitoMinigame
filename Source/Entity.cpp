@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "Game.h"
 
 
 Entity::Entity(std::string _name)
@@ -63,12 +64,14 @@ bool Entity::IsAlive()
 void Entity::Move(float dx, float dy)
 {
 	x += dx * speed;
-	y += (dy * speed) + 1;
+	y += dy * speed;
 }
 
 SDL_Rect Entity::EntityRect()
 {
 	return entityCollider;
 }
+
+
 
 
