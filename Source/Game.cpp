@@ -156,12 +156,6 @@ bool Game::Update()
 		idx_shot %= MAX_SHOTS;
 		Mix_PlayChannel(-1, Fx_shoot, 0);
 	}
-	if (keys[SDL_SCANCODE_P] == KEY_DOWN)
-	{
-		Enemy[idx_enemy].Init(13, WINDOW_WIDTH << 1, 56, 20, 10, 1, 1);
-		idx_enemy++;
-		idx_enemy %= MAX_ENEMIES;
-	}
 	Player.Move(fx, fy);
 	for (int i = 0; i < MAX_SHOTS; ++i)
 	{
@@ -176,11 +170,11 @@ bool Game::Update()
 	{
 		if (Enemy[i].IsAlive())
 		{
-			Enemy[i].Move(1, 0);
-			//if (Enemy[i].GetX() > WINDOW_WIDTH) Enemy[i].ShutDown();
+			Enemy[i].Move(0.5f, 0);
+			if (Enemy[i].GetX() > WINDOW_WIDTH) Shots[i].ShutDown();
 		}
 	}
-
+	RandSpawn();
 	//Collisions Update
 	//TODO: CHECK PLAYER, SHOTS && ENEMIES COLLISIONS
 	for (int i = 0; i < MAX_SHOTS; i++)
@@ -193,6 +187,15 @@ bool Game::Update()
 				Enemy[i].ShutDown();
 				std::cout << "collision!" << std::endl;
 			}
+		}
+	}
+	for (int i = 0; i < MAX_ENEMIES; i++)
+	{
+		if (CheckCollision(Enemy[i].EntityRect(), Player.EntityRect()))
+		{
+			Enemy[i].ShutDown();
+			Player.ShutDown();
+			std::cout << "player collsion!" << std::endl;
 		}
 	}
 	return false;
@@ -232,7 +235,7 @@ void Game::Draw()
 	}
 	for (int i = 0; i < MAX_ENEMIES; ++i)
 	{
-		if (Enemy[i].IsAlive())
+		if (Enemy[i].GetX() != NULL)
 		{
 			Enemy[i].GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 			SDL_RenderCopy(Renderer, EnemyIMG, NULL, &dstRc);
@@ -274,4 +277,26 @@ bool Game::CheckCollision(SDL_Rect a, SDL_Rect b)
 		return false;
 	}
 	return true;
+}
+void Game::RandSpawn()
+{
+	srand(time(NULL));
+	int Randnum;
+	int inity[MAX_ENEMIES];
+	int initx[MAX_ENEMIES];
+	Randnum = rand() % 10 + 1;
+	//std::cout << Randnum << initx;
+	if (Randnum > 5)
+	{
+		for (int i = 0; i < MAX_ENEMIES; i++)
+		{
+			inity[i] = rand() % WINDOW_HEIGHT - 85	 /* -altura del enemigo */;
+			if (Enemy[i].IsAlive() == NULL)
+			{
+				//crea enemigo
+				Enemy[i].Init(0, inity[i], 85, 85, 3, 1, 1);
+				break;
+			}
+		}
+	}
 }

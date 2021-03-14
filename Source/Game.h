@@ -27,6 +27,7 @@ public:
 	bool Update();
 	void Draw();
 	bool CheckCollision(SDL_Rect a, SDL_Rect b);
+	void RandSpawn();
 
 private:
 	SDL_Window* Window;
@@ -50,5 +51,3 @@ private:
 	enum KEY_STATE { KEY_IDLE, KEY_DOWN, KEY_REPEAT, KEY_UP };
 	KEY_STATE keys[MAX_KEYS];
 };
-
-

@@ -20,7 +20,6 @@ public:
 	void Move(float dx, float dy);
 	SDL_Rect EntityRect();
 
-
 private:
 	float x, y;
 	int width, height;
@@ -28,6 +27,4 @@ private:
 	bool is_alive;
 	
 	SDL_Rect entityCollider;
-
 };
-

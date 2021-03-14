@@ -71,7 +71,3 @@ SDL_Rect Entity::EntityRect()
 {
 	return entityCollider;
 }
-
-
-
-
