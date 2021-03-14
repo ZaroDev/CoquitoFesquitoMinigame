@@ -87,6 +87,10 @@ bool Game::Init()
 	SDL_QueryTexture(Background, NULL, NULL, &w, NULL);
 	Scene.Init(0, 0, w, WINDOW_HEIGHT, 4, NULL, NULL);
 
+
+	Entity platform;
+	platform.Init(100, 200, 104, 82, 0, 3, 1);
+
 	godMode = false;
 
 
@@ -135,9 +139,9 @@ bool Game::Update()
 	int fx = 0, fy = 0;
 	if (keys[SDL_SCANCODE_ESCAPE] == KEY_DOWN)	return true;
 	if (keys[SDL_SCANCODE_F1] == KEY_DOWN) godMode = !godMode;
-	if (keys[SDL_SCANCODE_UP] == KEY_REPEAT)
+	if (keys[SDL_SCANCODE_UP] == KEY_DOWN)
 	{
-		fy = -2;
+		fy = -10;
 		Mix_PlayChannel(-1, Fx_shoot, 0);
 	}
 	
@@ -145,6 +149,8 @@ bool Game::Update()
 	if (keys[SDL_SCANCODE_RIGHT] == KEY_REPEAT)	fx = 1;
 	
 	Player.Move(fx, fy);
+
+	
 
 	//Collisions Update
 	//TODO: CHECK PLAYER, SHOTS && ENEMIES COLLISIONS
@@ -170,6 +176,13 @@ void Game::Draw()
 	SDL_RenderCopy(Renderer, PlayerIMG, NULL, &dstRc);
 	if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
 
+	
+	
+	Platform.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
+	SDL_SetRenderDrawColor(Renderer, 150, 52, 7, 255);
+	SDL_RenderDrawRect(Renderer, &dstRc);
+	SDL_RenderFillRect(Renderer, &dstRc);
+	
 	//Update screen
 	SDL_RenderPresent(Renderer);
 
