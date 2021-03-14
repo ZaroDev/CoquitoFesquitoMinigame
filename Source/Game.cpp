@@ -62,7 +62,18 @@ bool Game::Init()
 		SDL_Log("Unable to load Shot: %s", SDL_GetError());
 		return false;
 	}
-	
+	Text = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/score.png"));
+	if (Text == NULL)
+	{
+		SDL_Log("Unable to load score: %s", SDL_GetError());
+		return false;
+	}
+	Font = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/numbers.png"));
+	if	(Font == NULL)
+	{
+		SDL_Log("Unable to load font: %s", SDL_GetError());
+		return false;
+	}
 	//Initialize Music
 	Mix_Init(MIX_INIT_OGG);
 	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024);
@@ -79,14 +90,25 @@ bool Game::Init()
 		SDL_Log("Unable to load FX_SHOT: %s", SDL_GetError());
 		return false;
 	}
-
+	Fx_kill = Mix_LoadWAV("Assets/enemy-dead.wav");
+	if (Fx_shoot == NULL)
+	{
+		SDL_Log("Unable to load FX_kill: %s", SDL_GetError());
+		return false;
+	}
+	Fx_gameOver = Mix_LoadWAV("Assets/game-over.wav");
+	if (Fx_shoot == NULL)
+	{
+		SDL_Log("Unable to load fx_gameover: %s", SDL_GetError());
+		return false;
+	}
 
 	
 	//Init variables
 	//AUDIO
 	Mix_PlayMusic(Music, -1);
 	//VIDEO
-	Player.Init(620, WINDOW_HEIGHT >> 1, 82, 82, 5, 3, 1);
+	Player.Init(950, WINDOW_HEIGHT >> 1, 82, 82, 5, 3, 1);
 	//GAME VARIABLES
 	int w;
 	SDL_QueryTexture(Background, NULL, NULL, &w, NULL);
@@ -155,28 +177,41 @@ bool Game::Update()
 		idx_shot++;
 		idx_shot %= MAX_SHOTS;
 		Mix_PlayChannel(-1, Fx_shoot, 0);
+	
 	}
 	Player.Move(fx, fy);
+	//Moving shots
 	for (int i = 0; i < MAX_SHOTS; ++i)
 	{
 		if (Shots[i].IsAlive())
 		{
 			Shots[i].Move(-1, 0);
-			if (Shots[i].GetX() < 0)	Shots[i].ShutDown();
+			if (Shots[i].GetX() < 0)
+			{
+				std::cout << "Shot shutdown" << std::endl;
+				Shots[i].ShutDown();
+			}
 		}
 	}
-
+	//Moving Enemies
 	for (int i = 0; i < MAX_ENEMIES; i++)
 	{
 		if (Enemy[i].IsAlive())
 		{
 			Enemy[i].Move(0.5f, 0);
-			if (Enemy[i].GetX() > WINDOW_WIDTH) Shots[i].ShutDown();
+			if (Enemy[i].GetX() > WINDOW_WIDTH)
+			{
+				Enemy[i].ShutDown();
+				std::cout << "Enemy shutdown" << std::endl;
+			}
 		}
 	}
 	RandSpawn();
+	if (!Player.IsAlive())
+	{
+		SpawnPlayer();
+	}
 	//Collisions Update
-	//TODO: CHECK PLAYER, SHOTS && ENEMIES COLLISIONS
 	for (int i = 0; i < MAX_SHOTS; i++)
 	{
 		for (int j = 0; j < MAX_SHOTS; j++)
@@ -185,17 +220,22 @@ bool Game::Update()
 			{
 				Shots[j].ShutDown();
 				Enemy[i].ShutDown();
-				std::cout << "collision!" << std::endl;
+				std::cout << "Enemy Kill!" << std::endl;
+				Mix_PlayChannel(-1, Fx_kill, 0);
 			}
 		}
 	}
 	for (int i = 0; i < MAX_ENEMIES; i++)
 	{
-		if (CheckCollision(Enemy[i].EntityRect(), Player.EntityRect()))
+		if (Enemy[i].IsAlive() && Player.IsAlive())
 		{
-			Enemy[i].ShutDown();
-			Player.ShutDown();
-			std::cout << "player collsion!" << std::endl;
+			if (CheckCollision(Enemy[i].EntityRect(), Player.EntityRect()))
+			{
+				Player.ShutDown();
+				Enemy[i].ShutDown();
+				std::cout << "player collsion!" << std::endl;
+				Mix_PlayChannel(-1, Fx_gameOver, 0);
+			}
 		}
 	}
 	return false;
@@ -215,10 +255,12 @@ void Game::Draw()
 
 	Scene.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 	SDL_RenderCopy(Renderer, Background, NULL, &dstRc);
-
-	Player.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
-	SDL_RenderCopy(Renderer, PlayerIMG, NULL, &dstRc);
-	if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
+	if (Player.IsAlive())
+	{
+		Player.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
+		SDL_RenderCopy(Renderer, PlayerIMG, NULL, &dstRc);
+		if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
+	}
 	
 	Platform.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 	SDL_SetRenderDrawColor(Renderer, 150, 52, 7, 255);
@@ -239,7 +281,12 @@ void Game::Draw()
 		{
 			Enemy[i].GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 			SDL_RenderCopy(Renderer, EnemyIMG, NULL, &dstRc);
-			if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
+			if (godMode)
+			{
+				SDL_RenderDrawRect(Renderer, &dstRc);
+				SDL_SetRenderDrawColor(Renderer, 150, 52, 7, 255);
+				SDL_RenderDrawRect(Renderer, &srcRc);
+			}
 		}
 	}
 	//Update screen
@@ -288,15 +335,24 @@ void Game::RandSpawn()
 	//std::cout << Randnum << initx;
 	if (Randnum > 5)
 	{
-		for (int i = 0; i < MAX_ENEMIES; i++)
+		for (int i = 0; i < MAX_ENEMIES - 1; i++)
 		{
 			inity[i] = rand() % WINDOW_HEIGHT - 85	 /* -altura del enemigo */;
-			if (Enemy[i].IsAlive() == NULL)
+			if (Enemy[i].IsAlive() == false)
 			{
 				//crea enemigo
 				Enemy[i].Init(0, inity[i], 85, 85, 3, 1, 1);
+				std::cout << "Enemy spawn!" << std::endl;
+				std::cout << "Enemy " << i << " w: " << Enemy[i].EntityRect().w << " h: "<<  Enemy[i].EntityRect().h << std::endl;
 				break;
 			}
 		}
 	}
+}
+
+void Game::SpawnPlayer()
+{
+	Player.Init(950, WINDOW_HEIGHT >> 1, 82, 82, 5, 3, 1);
+
+
 }

@@ -6,6 +6,7 @@
 
 
 #include "Entity.h"
+#include "UI.h"
 #include <iostream>
 
 #define WINDOW_WIDTH	1024
@@ -28,6 +29,7 @@ public:
 	void Draw();
 	bool CheckCollision(SDL_Rect a, SDL_Rect b);
 	void RandSpawn();
+	void SpawnPlayer();
 
 private:
 	SDL_Window* Window;
@@ -37,10 +39,16 @@ private:
 	SDL_Texture* Background;
 	SDL_Texture* ShotIMG;
 	SDL_Texture* EnemyIMG;
+	SDL_Texture* Text;
+	SDL_Texture* Font;
 
 
 	Mix_Music* Music;
 	Mix_Chunk* Fx_shoot;
+	Mix_Chunk* Fx_kill;
+	Mix_Chunk* Fx_gameOver;
+
+	UI UI;
 	
 
 	Entity Player, Scene, Platform, Shots[MAX_SHOTS], Enemy[MAX_ENEMIES];

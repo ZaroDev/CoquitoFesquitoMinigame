@@ -53,8 +53,10 @@ int Entity::GetWidth()
 void Entity::ShutDown()
 {
 	is_alive = false;
-	entityCollider.w = 0;
-	entityCollider.h = 0;
+	entityCollider.w = NULL;
+	entityCollider.h = NULL;
+	entityCollider.x = NULL;
+	entityCollider.y = NULL;
 }
 bool Entity::IsAlive()
 {
@@ -65,6 +67,8 @@ void Entity::Move(float dx, float dy)
 {
 	x += dx * speed;
 	y += dy * speed;
+	entityCollider.x = x;
+	entityCollider.y = y;
 }
 
 SDL_Rect Entity::EntityRect()
