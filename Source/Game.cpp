@@ -44,7 +44,7 @@ bool Game::Init()
 		SDL_Log("Unable to load PlayerIMG: %s", SDL_GetError());
 		return false;
 	}
-	EnemyIMG = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/ghost.png"));
+	EnemyIMG = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/enemy.png"));
 	if (EnemyIMG == NULL)
 	{
 		SDL_Log("Unable to load PlayerIMG: %s", SDL_GetError());
@@ -56,7 +56,7 @@ bool Game::Init()
 		SDL_Log("Unable to load Background: %s", SDL_GetError());
 		return false;
 	}
-	ShotIMG = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/steps.png"));
+	ShotIMG = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/bullet.png"));
 	if (ShotIMG == NULL)
 	{
 		SDL_Log("Unable to load Shot: %s", SDL_GetError());
@@ -109,6 +109,7 @@ bool Game::Init()
 	Mix_PlayMusic(Music, -1);
 	//VIDEO
 	Player.Init(950, WINDOW_HEIGHT >> 1, 82, 82, 5, 3, 1);
+
 	//GAME VARIABLES
 	int w;
 	SDL_QueryTexture(Background, NULL, NULL, &w, NULL);
@@ -126,9 +127,15 @@ void Game::Release()
 
 	SDL_DestroyTexture(PlayerIMG);
 	SDL_DestroyTexture(Background);
+	SDL_DestroyTexture(ShotIMG);
+	SDL_DestroyTexture(Text);
+	SDL_DestroyTexture(Font);
 
 	Mix_FreeMusic(Music);
 	Mix_FreeChunk(Fx_shoot);
+	Mix_FreeChunk(Fx_kill);
+	Mix_FreeChunk(Fx_gameOver);
+
 	Mix_CloseAudio();
 	Mix_Quit();
 	IMG_Quit();
@@ -173,7 +180,7 @@ bool Game::Update()
 		Player.GetRect(&x, &y, &w, &h);
 		//size: 56x20
 		//offset from player: dx, dy = [(29, 3), (29, 59)]
-		Shots[idx_shot].Init(x, y, 56, 20, 10, 1, 1);
+		Shots[idx_shot].Init(x, y + 5, 100, 100, 10, 1, 1);
 		idx_shot++;
 		idx_shot %= MAX_SHOTS;
 		Mix_PlayChannel(-1, Fx_shoot, 0);
@@ -221,6 +228,7 @@ bool Game::Update()
 				Shots[j].ShutDown();
 				Enemy[i].ShutDown();
 				std::cout << "Enemy Kill!" << std::endl;
+				UI.UpdateScore(1);
 				Mix_PlayChannel(-1, Fx_kill, 0);
 			}
 		}
@@ -234,6 +242,7 @@ bool Game::Update()
 				Player.ShutDown();
 				Enemy[i].ShutDown();
 				std::cout << "player collsion!" << std::endl;
+				UI.ResetScore();
 				Mix_PlayChannel(-1, Fx_gameOver, 0);
 			}
 		}
@@ -250,17 +259,44 @@ void Game::Draw()
 	//Draw player
 	SDL_Rect srcRc;
 	SDL_Rect dstRc;
-
-
+	//Score rect
+	srcRc.x = -25;
+	srcRc.y = -50;
+	srcRc.w = 200;
+	srcRc.h = 200;
+	
+	dsrRc.x = 150;
+	dsrRc.y = 35;
+	dsrRc.w = 25;
+	dsrRc.h = 25;
+	dsrRc1.x = 180;
+	dsrRc1.y = 35;
+	dsrRc1.w = 25;
+	dsrRc1.h = 25;
+	dsrRc2.x = 210;
+	dsrRc2.y = 35;
+	dsrRc2.w = 25;
+	dsrRc2.h = 25;
+	dsrRc3.x = 240;
+	dsrRc3.y = 35;
+	dsrRc3.w = 25;
+	dsrRc3.h = 25;
 
 	Scene.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 	SDL_RenderCopy(Renderer, Background, NULL, &dstRc);
+	SDL_RenderCopy(Renderer, Text, NULL, &srcRc);
+	UI.DrawScore(&scrRc, &scrRc1, &scrRc2, &scrRc3);
+	SDL_RenderCopy(Renderer, Font, &scrRc, &dsrRc);
+	SDL_RenderCopy(Renderer, Font, &scrRc1, &dsrRc1);
+	SDL_RenderCopy(Renderer, Font, &scrRc2, &dsrRc2);
+	SDL_RenderCopy(Renderer, Font, &scrRc3, &dsrRc3);
 	if (Player.IsAlive())
 	{
 		Player.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 		SDL_RenderCopy(Renderer, PlayerIMG, NULL, &dstRc);
 		if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
 	}
+	
 	
 	Platform.GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 	SDL_SetRenderDrawColor(Renderer, 150, 52, 7, 255);

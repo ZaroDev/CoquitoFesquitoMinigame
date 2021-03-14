@@ -48,6 +48,17 @@ private:
 	Mix_Chunk* Fx_kill;
 	Mix_Chunk* Fx_gameOver;
 
+
+	SDL_Rect scrRc;
+	SDL_Rect scrRc1;
+	SDL_Rect scrRc2;
+	SDL_Rect scrRc3;
+
+	SDL_Rect dsrRc;
+	SDL_Rect dsrRc1;
+	SDL_Rect dsrRc2;
+	SDL_Rect dsrRc3;
+
 	UI UI;
 	
 
