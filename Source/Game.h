@@ -35,6 +35,7 @@ private:
 	SDL_Texture* PlayerIMG;
 	SDL_Texture* Background;
 	SDL_Texture* ShotIMG;
+	SDL_Texture* EnemyIMG;
 
 
 	Mix_Music* Music;
@@ -45,7 +46,7 @@ private:
 
 	bool godMode;
 	int idx_shot;
-
+	int idx_enemy;
 	enum KEY_STATE { KEY_IDLE, KEY_DOWN, KEY_REPEAT, KEY_UP };
 	KEY_STATE keys[MAX_KEYS];
 };

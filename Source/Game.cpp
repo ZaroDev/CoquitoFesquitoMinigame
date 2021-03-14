@@ -44,7 +44,12 @@ bool Game::Init()
 		SDL_Log("Unable to load PlayerIMG: %s", SDL_GetError());
 		return false;
 	}
-
+	EnemyIMG = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/ghost.png"));
+	if (EnemyIMG == NULL)
+	{
+		SDL_Log("Unable to load PlayerIMG: %s", SDL_GetError());
+		return false;
+	}
 	Background = SDL_CreateTextureFromSurface(Renderer, IMG_Load("Assets/background.png"));
 	if (Background == NULL)
 	{
@@ -87,6 +92,7 @@ bool Game::Init()
 	SDL_QueryTexture(Background, NULL, NULL, &w, NULL);
 	Scene.Init(0, 0, w, WINDOW_HEIGHT, 4, NULL, NULL);
 	idx_shot = 0;
+	idx_enemy = 0;
 	godMode = false;
 
 
@@ -150,7 +156,12 @@ bool Game::Update()
 		idx_shot %= MAX_SHOTS;
 		Mix_PlayChannel(-1, Fx_shoot, 0);
 	}
-	
+	if (keys[SDL_SCANCODE_P] == KEY_DOWN)
+	{
+		Enemy[idx_enemy].Init(13, WINDOW_WIDTH << 1, 56, 20, 10, 1, 1);
+		idx_enemy++;
+		idx_enemy %= MAX_ENEMIES;
+	}
 	Player.Move(fx, fy);
 	for (int i = 0; i < MAX_SHOTS; ++i)
 	{
@@ -161,10 +172,29 @@ bool Game::Update()
 		}
 	}
 
-	
+	for (int i = 0; i < MAX_ENEMIES; i++)
+	{
+		if (Enemy[i].IsAlive())
+		{
+			Enemy[i].Move(1, 0);
+			//if (Enemy[i].GetX() > WINDOW_WIDTH) Enemy[i].ShutDown();
+		}
+	}
 
 	//Collisions Update
 	//TODO: CHECK PLAYER, SHOTS && ENEMIES COLLISIONS
+	for (int i = 0; i < MAX_SHOTS; i++)
+	{
+		for (int j = 0; j < MAX_SHOTS; j++)
+		{
+			if (CheckCollision(Enemy[i].EntityRect(), Shots[j].EntityRect()))
+			{
+				Shots[j].ShutDown();
+				Enemy[i].ShutDown();
+				std::cout << "collision!" << std::endl;
+			}
+		}
+	}
 	return false;
 }
 void Game::Draw()
@@ -197,6 +227,15 @@ void Game::Draw()
 		{
 			Shots[i].GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
 			SDL_RenderCopy(Renderer, ShotIMG, NULL, &dstRc);
+			if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
+		}
+	}
+	for (int i = 0; i < MAX_ENEMIES; ++i)
+	{
+		if (Enemy[i].IsAlive())
+		{
+			Enemy[i].GetRect(&dstRc.x, &dstRc.y, &dstRc.w, &dstRc.h);
+			SDL_RenderCopy(Renderer, EnemyIMG, NULL, &dstRc);
 			if (godMode) SDL_RenderDrawRect(Renderer, &dstRc);
 		}
 	}
