@@ -11,7 +11,7 @@ A simple minigame about a ghost that shots to other ghosts, let's see how much p
  - Jose Antonio Atencia - Programmer
  - Victor Falcon        - Game Designer, Programmer
  - Fernando Freixenet   - Programmer
- - Anna Metreveli       - Art
+ - Anna Metreveli       - Artist
 
 ## Controls
  - Arrow keys to move
